@@ -98,7 +98,7 @@ int main(int argc, char** argv)
   TrackerParam params;
   params.read(std::string(argv[1]));
   std::map<int, std::vector< std::vector< std::string > > > detections = petsReading(argv[2]);
-  cv::Mat planView = cv::imread("PlanView.png");
+//  cv::Mat planView = cv::imread("PlanView.png");
   ImageManager img(argv[3]);
   std::shared_ptr<Tracker> tracker(new GlobalTracker(params));
   std::vector< std::vector < std::string > > curr;
@@ -107,7 +107,7 @@ int main(int argc, char** argv)
   cv::Mat image, trackingImg, plan;
   cv::Rect rect;
   std::vector<cv::Rect> rects;
-  std::vector<cv::Point2f> points;
+//  std::vector<cv::Point2f> points;
   
   const double& milliseconds = 1000 / 7;
   
@@ -121,7 +121,7 @@ cv::VideoWriter output_cap("output.avi",
   {
     
     rects.clear();
-    points.clear();
+//    points.clear();
     dets.clear();
     image = cv::imread(img.next(1));
     trackingImg = image.clone();
@@ -130,7 +130,7 @@ cv::VideoWriter output_cap("output.avi",
     curr = detections[i+1];
     std::stringstream ss;
     int j = 0;
-    double x, y;
+//    double x, y;
     for(const auto &c : curr)
     {
       rect = cv::Rect(cvRound(atof(c[0].c_str())), cvRound(atof(c[1].c_str())),
@@ -138,8 +138,8 @@ cv::VideoWriter output_cap("output.avi",
       
       rects.push_back(rect);
       
-      points.push_back(cv::Point2f(rect.x + (rect.width >> 1), rect.y + rect.height));
-      calcProjection(cv::Point2f(rect.x + (rect.width >> 1), rect.y + rect.height), x, y);
+//      points.push_back(cv::Point2f(rect.x + (rect.width >> 1), rect.y + rect.height));
+//      calcProjection(cv::Point2f(rect.x + (rect.width >> 1), rect.y + rect.height), x, y);
       Detection d(rect.x + (rect.width >> 1), rect.y + (rect.height >> 1), rect.width, rect.height);
       dets.push_back(d);
       
