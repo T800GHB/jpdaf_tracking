@@ -14,7 +14,7 @@
  *
  *  JPDAFTracker is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR F PARTICULAR PURPOSE.  See the
  *  GNU Lesser General Public License for more details.
  *
  *  You should have received a copy of the GNU Lesser General Public License
@@ -60,15 +60,15 @@ namespace JPDAFTracker
       void read(const std::string& filename);
       TrackerParam& operator=(const TrackerParam& param_copy)
       {
-	this->pd = param_copy.pd;
-	this->pg = param_copy.pg;
-	this->g_sigma = param_copy.g_sigma;
-	this->lambda = param_copy.lambda;
-	this->gamma = param_copy.gamma;
-	this->target_delta = param_copy.target_delta;
-	this->assocCost = param_copy.assocCost;
-	this->dt = param_copy.dt;
-	return *this;
+        this->pd = param_copy.pd;
+        this->pg = param_copy.pg;
+        this->g_sigma = param_copy.g_sigma;
+        this->lambda = param_copy.lambda;
+        this->gamma = param_copy.gamma;
+        this->target_delta = param_copy.target_delta;
+        this->assocCost = param_copy.assocCost;
+        this->dt = param_copy.dt;
+        return *this;
       }
   };
 }

@@ -2,10 +2,10 @@
 
 using namespace JPDAFTracker;
 
-Track::Track(const float& dt, const cv::Point2f& target_delta, const float& x, const float& y, const float& vx, const float& vy,
-    const float& g_sigma, const float& gamma, const Eigen::Matrix2f& _R)
-  : g_sigma(g_sigma), gamma(gamma)
-{
+Track::Track(const float& dt, const cv::Point2f& target_delta, const float& x, const float& y,
+        const float& vx, const float& vy, const float& g_sigma, const float& gamma,
+        const Eigen::Matrix2f& _R) : g_sigma(g_sigma), gamma(gamma) {
+
   KF = std::shared_ptr<Kalman>(new Kalman(dt, target_delta, x, y, vx, vy, _R));
   life_time = 0;
   nodetections = 0;
@@ -15,20 +15,15 @@ Track::Track(const float& dt, const cv::Point2f& target_delta, const float& x, c
 }
 
 
-cv::Point2f Track::predict()
-{
+cv::Point2f Track::predict() {
+
   last_prediction = KF->predict();
   const Eigen::Matrix2f& S = KF->getS();
-  if(life_time == 0) 
-  {
+  if(life_time == 0) {
     initial_entropy = KF->getEntropy();
-  }
-  else if(nodetections >= maxNotDetection)
-  {
+  } else if(nodetections >= maxNotDetection) {
     entropy_sentinel = TrackState::DISCARD;
-  }
-  else if(life_time >= 10)
-  {
+  } else if(life_time >= 10) {
     entropy_sentinel = TrackState::ACCEPT;
   }
   

@@ -2,10 +2,10 @@
 
 using namespace JPDAFTracker;
 
-Kalman::Kalman(const float& dt, const cv::Point2f& target_delta, const float& x, const float& y, const float& vx, const float& vy, const Eigen::Matrix2f& _R)
-{
+Kalman::Kalman(const float& dt, const cv::Point2f& target_delta, const float& x, const float& y,
+        const float& vx, const float& vy, const Eigen::Matrix2f& _R) {
   //TRANSITION MATRIX
-  A << 1, dt, 0, 0,
+  F << 1, dt, 0, 0,
        0, 1, 0, 0,
        0, 0, 1, dt,
        0, 0, 0, 1;
@@ -21,8 +21,8 @@ Kalman::Kalman(const float& dt, const cv::Point2f& target_delta, const float& x,
 	0, dt;
 	  
   //STATE OBSERVATION MATRIX
-  C = Eigen::MatrixXf(2, 4);
-  C << 1, 0, 0, 0,
+  H = Eigen::MatrixXf(2, 4);
+  H << 1, 0, 0, 0,
        0, 0, 1, 0;
   
   //INITIAL COVARIANCE MATRIX
@@ -42,28 +42,24 @@ Kalman::Kalman(const float& dt, const cv::Point2f& target_delta, const float& x,
 }
 
 
-cv::Point2f Kalman::predict()
-{
+cv::Point2f Kalman::predict() {
   
-  if(first)
-  {
+  if(first) {
     x_predict << last_prediction.x, last_speed.x, last_prediction.y, last_speed.y;
     first = false;
-  }
-  else
-  {
-    x_predict = A*x_filter;
+  } else {
+    x_predict = F*x_filter;
   }
   
   //Covariance Matrix predicted error
-  P_predict = A * P * A.transpose() + G * Q * G.transpose();
+  P_predict = F * P * F.transpose() + G * Q * G.transpose();
   
   
   //Predicted Measurement
-  z_predict = C * x_predict;
+  z_predict = H * x_predict;
   
   //Error Measurement Covariance Matrix
-  S = C * P_predict * C.transpose() + R;
+  S = H * P_predict * H.transpose() + R;
   
   //Compute Entropy
   entropy = k + .5 * log10(P.determinant()); 
@@ -75,20 +71,19 @@ cv::Point2f Kalman::predict()
 
 void Kalman::gainUpdate(const float& beta)
 {
-  K = P_predict * C.transpose() * S.inverse();
+  K = P_predict * H.transpose() * S.inverse();
   P = P_predict - (1 - beta) * K * S * K.transpose();
 }
 
-Eigen::Vector4f Kalman::update(const std::vector< Eigen::Vector2f >& selected_detections, const Eigen::VectorXf& beta, const float& last_beta)
-{
+Eigen::Vector4f Kalman::update(const std::vector< Eigen::Vector2f >& selected_detections,
+        const Eigen::VectorXf& beta, const float& last_beta) {
   Eigen::Vector4f a;
   a.setZero();
 
   x_filter.setZero();
   uint i = 0;
   
-  for(const auto& det : selected_detections)
-  {
+  for(const auto& det : selected_detections) {
     a = x_predict + K * (det - z_predict);
     x_filter = x_filter + beta(i) * a;
     ++i;
@@ -100,14 +95,10 @@ Eigen::Vector4f Kalman::update(const std::vector< Eigen::Vector2f >& selected_de
   Eigen::Matrix4f Pk = Eigen::Matrix4f::Zero();
   Eigen::Vector2f det;
   
-  for(i = 0; i < selected_detections.size() + 1; ++i)
-  {
-    if(i == selected_detections.size())
-    {
+  for(i = 0; i < selected_detections.size() + 1; ++i) {
+    if(i == selected_detections.size()) {
       a = x_predict;
-    }
-    else
-    {
+    } else {
       a = x_predict + K * (selected_detections.at(i) - z_predict);
     }
     
