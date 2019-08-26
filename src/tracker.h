@@ -47,13 +47,12 @@ namespace JPDAFTracker
   class Tracker
   {
     protected:
-      typedef std::vector<Eigen::Vector2f> Vectors2f;
+      typedef std::vector<Eigen::Vector2f> Vec2f;
       typedef std::vector<Eigen::MatrixXf> Matrices;
       typedef std::vector<Detection> Detections;
       typedef std::vector<bool> VecBool;
       typedef std::shared_ptr<Track> Track_ptr;
       typedef std::vector< Track_ptr > Tracks;
-      typedef std::vector<Eigen::Vector2f> Vec2f;
     public:
       Tracker(const TrackerParam& _param) : param_(_param) { ; }
       void drawTracks(cv::Mat &_img) const;
@@ -62,18 +61,15 @@ namespace JPDAFTracker
       virtual void track(const Detections& _detections, VecBool& _isAssoc, uint& _trackID) { ; }
       virtual inline void push_back(const Track_ptr& _track) { ; }
     public:
-      inline const uint size() const
-      {
-	return tracks_.size();
+      inline const uint size() const {
+	    return tracks_.size();
       }
     public:
-      Tracks tracks()
-      {
-	return tracks_;
+      Tracks tracks() {
+	    return tracks_;
       }
-      const Tracks tracks() const
-      {
-	return tracks_;
+      const Tracks tracks() const {
+	    return tracks_;
       }
     protected:
       uint trackID_;
@@ -82,7 +78,7 @@ namespace JPDAFTracker
       TrackerParam param_;
       Tracks tracks_;
       Vec2f prev_detections_;
-      Vectors2f not_associated_;
+      Vec2f not_associated_;
       cv::RNG rng_;
       Eigen::MatrixXf beta_;
       Eigen::VectorXf last_beta_;
@@ -93,11 +89,11 @@ namespace JPDAFTracker
       constexpr static uint MAX_ASSOC = 10000;
     protected:
      VecBool analyze_tracks(const cv::Mat& _q, const Detections& _detections);
-     Matrices generate_hypothesis(const Vectors2f& _selected_detections, const cv::Mat& _q);
-     Eigen::MatrixXf joint_probability(const Matrices& _association_matrices, const Vectors2f& _selected_detections);
+     Matrices generate_hypothesis(const Vec2f& _selected_detections, const cv::Mat& _q);
+     Eigen::MatrixXf joint_probability(const Matrices& _association_matrices, const Vec2f& _selected_detections);
     private:
-     virtual void associate(Vectors2f& _selected_detections, cv::Mat& _q, const Detections& _detections) { ; }
-     virtual void associate(Vectors2f& _selected_detections, cv::Mat& _q, const Detections& _detections, VecBool& _isAssoc) { ; }
+     virtual void associate(Vec2f& _selected_detections, cv::Mat& _q, const Detections& _detections) { ; }
+     virtual void associate(Vec2f& _selected_detections, cv::Mat& _q, const Detections& _detections, VecBool& _isAssoc) { ; }
   };
 }
 

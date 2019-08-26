@@ -56,7 +56,7 @@ namespace JPDAFTracker
      void delete_tracks();
      void manage_new_tracks();
     private:
-     void associate(Vectors2f& _selected_detections, cv::Mat& _q, const Detections& _detections);
+     void associate(Vec2f& _selected_detections, cv::Mat& _q, const Detections& _detections);
   };
 }
 

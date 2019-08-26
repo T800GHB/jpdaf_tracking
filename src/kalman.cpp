@@ -69,8 +69,7 @@ cv::Point2f Kalman::predict() {
   return last_prediction;
 }
 
-void Kalman::gainUpdate(const float& beta)
-{
+void Kalman::gainUpdate(const float& beta) {
   K = P_predict * H.transpose() * S.inverse();
   P = P_predict - (1 - beta) * K * S * K.transpose();
 }
