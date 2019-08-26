@@ -49,7 +49,6 @@ Eigen::MatrixXf Tracker::joint_probability(const Matrices& _association_matrices
       if(mea_indicator == 1) {
         //Update the total number of wrong measurements in X
         --false_alarms;
-
         //Detect which track is associated to the measurement j
         //and compute the probability
         for(uint notZero = 0; notZero < tracksize; ++notZero) {
@@ -140,11 +139,10 @@ Tracker::Matrices Tracker::generate_hypothesis(const Vec2f& _selected_detections
   
   uint hyp_num = 0;
   //Generating all the possible association matrices from the possible measurements
-    
   if(validationIdx != 0) {
     for(uint i = 0; i < _q.rows; ++i) {
       for(uint j = 1; j < _q.cols; ++j) {
-        if(_q.at<int>(i, j)) {                              // == 1
+        if(_q.at<int>(i, j)) {                              // == 1, associate pair det and track
           tmp_association_matrices.at(hyp_num)(i, 0) = 0;
           tmp_association_matrices.at(hyp_num)(i, j) = 1;
           ++hyp_num;

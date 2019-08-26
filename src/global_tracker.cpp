@@ -68,7 +68,6 @@ void GlobalTracker::track(const GlobalTracker::Detections& _detections) {
       not_associate = analyze_tracks(q, _detections);
       //HYPOTHESIS
       const Matrices& association_matrices = generate_hypothesis(selected_detections, q);
-      
       //COMPUTE JOINT PROBABILITY
       beta_ = joint_probability(association_matrices, selected_detections);
       last_beta_ = beta_.row(beta_.rows() - 1);
