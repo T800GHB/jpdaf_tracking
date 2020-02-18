@@ -14,13 +14,13 @@ void GlobalTracker::track(const GlobalTracker::Detections& _detections) {
   if(init_) {
     prev_detections_.clear();
     for(const auto& det : _detections) {
-      prev_detections_.push_back(Eigen::Vector2f(det.x(), det.y()));
+      prev_detections_.emplace_back(Eigen::Vector2f(det.x(), det.y()));
     }
     init_ = false;
   } else if((not init_) and (not startTracking_)) {
     not_associated_.clear();
     for(const auto& det : _detections) {
-      not_associated_.push_back(Eigen::Vector2f(det.x(), det.y()));
+      not_associated_.emplace_back(Eigen::Vector2f(det.x(), det.y()));
     }
     manage_new_tracks();
     if(localTrackers_.size() > 0) {
@@ -38,21 +38,19 @@ void GlobalTracker::track(const GlobalTracker::Detections& _detections) {
       tracker->track(_detections, isAssoc, trackID_);
     }
 
-    uint i = 0;
-    for(const auto& ass : isAssoc) {
-      if(not ass) {
-	    not_associated_.push_back(Eigen::Vector2f(_detections.at(i).x(), _detections.at(i).y()));
-      }
-      ++i;
+    for (auto i = 0; i < isAssoc.size(); ++i) {
+        if (not isAssoc.at(i)) {
+            not_associated_.emplace_back(Eigen::Vector2f(_detections.at(i).x(), _detections.at(i).y()));
+        }
     }
-    
+
     delete_tracks();
     
     tracks_.clear();
     for(const auto& tracker : localTrackers_) {
       Tracks tr = tracker->tracks();
       for(const auto& t : tr) {
-	    tracks_.push_back(t);
+	    tracks_.emplace_back(t);
       }
     }
     //Create a q matrix with a width = clutter + number of tracks
@@ -72,26 +70,18 @@ void GlobalTracker::track(const GlobalTracker::Detections& _detections) {
       //COMPUTE JOINT PROBABILITY
       beta_ = joint_probability(association_matrices, selected_detections);
       last_beta_ = beta_.row(beta_.rows() - 1);
-	
-      //KALMAN PREDICT STEP
-      uint i = 0;
-      for(const auto& track : tracks_) {
-        if(not_associate.at(i)) {
-          track->gainUpdate(last_beta_(i));
+
+      for(auto i = 0; i < tracks_.size(); ++i) {
+          const auto& track = tracks_.at(i);
+          if(not_associate.at(i)) {
+            //KALMAN PREDICT STEP
+            track->gainUpdate(last_beta_(i));
+            //UPDATE AND CORRECT
+            track->update(selected_detections, beta_.col(i), last_beta_(i));
         }
-        i++;
-      }
-      
-      //UPDATE AND CORRECT
-      i = 0;
-      for(const auto& track : tracks_) {
-        if(not_associate.at(i)) {
-          track->update(selected_detections, beta_.col(i), beta_(beta_.rows() - 1, i) );
-        }
-        ++i;
       }
     }
-    
+
     manage_new_tracks(); 
   }
 }
@@ -103,7 +93,6 @@ void GlobalTracker::delete_tracks() {
     }
   }
 }
-
 
 void GlobalTracker::manage_new_tracks() {
   const uint& prevDetSize = prev_detections_.size();
@@ -157,7 +146,7 @@ void GlobalTracker::manage_new_tracks() {
     }
 
     if(tracker->size() > 0){
-      localTrackers_.push_back(tracker);
+      localTrackers_.emplace_back(tracker);
     }
 
     cv::Mat notAssignedDet(cv::Size(assigments_bin.cols, 1), CV_32SC1, cv::Scalar(0));
@@ -173,7 +162,7 @@ void GlobalTracker::manage_new_tracks() {
     prev_detections_.clear();
     for(uint i = 0; i < dets.total(); ++i) {
         const uint& idx = dets.at<cv::Point>(i).x;
-        prev_detections_.push_back(not_associated_.at(idx));
+        prev_detections_.emplace_back(not_associated_.at(idx));
     }
   }
 }
@@ -214,7 +203,7 @@ void GlobalTracker::associate(std::vector< Eigen::Vector2f >& _selected_detectio
     }
 
     if(found) {
-      _selected_detections.push_back(det);
+      _selected_detections.emplace_back(det);
       validationIdx++;
     }
     ++j;

@@ -42,8 +42,7 @@
 
 namespace JPDAFTracker
 {
-  class GlobalTracker : public Tracker
-  {
+  class GlobalTracker : public Tracker {
     private:
         typedef std::shared_ptr<Tracker> LocalTracker_ptr;
         typedef std::vector<LocalTracker_ptr> LocalTrackers;

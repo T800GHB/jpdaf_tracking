@@ -2,8 +2,7 @@
 
 using namespace JPDAFTracker;
 
-void Tracker::drawTracks(cv::Mat &_img) const
-{
+void Tracker::drawTracks(cv::Mat &_img) const {
   for(const auto& track : tracks_) {
     if(track->getId() != -1) {
       const cv::Point& p = track->getLastPrediction();

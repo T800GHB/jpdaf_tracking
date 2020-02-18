@@ -5,13 +5,12 @@
 
 namespace JPDAFTracker
 {
-  class LocalTracker : public Tracker
-  {
+  class LocalTracker : public Tracker {
     public:
       LocalTracker(const TrackerParam& _param);
       void track(const Detections& _detections, VecBool& _isAssoc, uint& _trackID);
       inline void push_back(const Track_ptr& _track) {
-	    tracks_.push_back(_track);
+	    tracks_.emplace_back(_track);
       }
 
     private:

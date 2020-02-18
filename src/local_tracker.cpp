@@ -39,26 +39,19 @@ void LocalTracker::track(const std::vector< Detection >& _detections, VecBool& _
     beta_ = joint_probability(association_matrices, selected_detections);
     last_beta_ = beta_.row(beta_.rows() - 1);
       
-    //KALMAN PREDICT STEP
-    uint i = 0;
-    
-    for(const auto& track : tracks_) {
-      if(not_associate.at(i)) {
-	    track->gainUpdate(last_beta_(i));
-      }
-      i++;
+
+    for(auto i = 0; i < tracks_.size(); ++i) {
+        const auto& track = tracks_.at(i);
+        if(not_associate.at(i)) {
+            //KALMAN PREDICT STEP
+            track->gainUpdate(last_beta_(i));
+            //UPDATE AND CORRECT
+            track->update(selected_detections, beta_.col(i), last_beta_(i));
+        } else {
+            track->notDetected();
+        }
     }
-    
-    //UPDATE AND CORRECT
-    i = 0;
-    for(const auto& track : tracks_) {
-      if(not_associate.at(i)) {
-	    track->update(selected_detections, beta_.col(i), beta_(beta_.rows() - 1, i) );
-      } else {
-	    track->notDetected();
-      }
-      ++i;
-    }
+
   }
   delete_tracks();
 }
@@ -106,7 +99,7 @@ void LocalTracker::associate(std::vector< Eigen::Vector2f >& _selected_detection
       ++i;
     }
     if(found) {
-      _selected_detections.push_back(det);
+      _selected_detections.emplace_back(det);
       _isAssoc.at(j) = true;
       validationIdx++;
     }

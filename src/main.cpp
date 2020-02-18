@@ -29,11 +29,11 @@ std::map<int, std::vector< std::vector< std::string > > > petsReading(const std:
       std::vector<std::string> row;
       while (end != std::string::npos)
       {
-        row.push_back(line.substr(start, end - start));
+        row.emplace_back(line.substr(start, end - start));
         start = end + delimiter.length();
         end = line.find(delimiter, start);
       }
-      row.push_back(line.substr(start, end - start));
+      row.emplace_back(line.substr(start, end - start));
       
       const uint& n = atoi(row[1].c_str());
       std::vector< std::vector<std::string> > detections;
@@ -43,10 +43,10 @@ std::map<int, std::vector< std::vector< std::string > > > petsReading(const std:
         std::vector<std::string> currDetections;
         try
         {
-          currDetections.push_back(row[j]);
-          currDetections.push_back(row[++j]);
-          currDetections.push_back(row[++j]);
-          currDetections.push_back(row[++j]);
+          currDetections.emplace_back(row[j]);
+          currDetections.emplace_back(row[++j]);
+          currDetections.emplace_back(row[++j]);
+          currDetections.emplace_back(row[++j]);
         }
         catch(...)
         {
@@ -54,7 +54,7 @@ std::map<int, std::vector< std::vector< std::string > > > petsReading(const std:
           exit(-1);
         }
         ++j;
-        detections.push_back(currDetections);
+        detections.emplace_back(currDetections);
       }
   
       pets.insert(std::make_pair(atoi(row[0].c_str()), detections));
@@ -127,26 +127,22 @@ int main(int argc, char** argv)
     //plan = planView.clone();
     
     curr = detections[i+1];
-    std::stringstream ss;
     int j = 0;
 //    double x, y;
     for(const auto &c : curr) {
-      rect = cv::Rect(cvRound(atof(c[0].c_str())), cvRound(atof(c[1].c_str())),
-                  cvRound(atof(c[2].c_str())), cvRound(atof(c[3].c_str())));
+      rect = cv::Rect(cvRound(std::stof(c[0])), cvRound(std::stof(c[1])),
+                  cvRound(std::stof(c[2])), cvRound(std::stof(c[3])));
       
-      rects.push_back(rect);
+      rects.emplace_back(rect);
       
-//      points.push_back(cv::Point2f(rect.x + (rect.width >> 1), rect.y + rect.height));
+//      points.emplace_back(cv::Point2f(rect.x + (rect.width >> 1), rect.y + rect.height));
 //      calcProjection(cv::Point2f(rect.x + (rect.width >> 1), rect.y + rect.height), x, y);
       Detection d(rect.x + (rect.width >> 1), rect.y + (rect.height >> 1), rect.width, rect.height);
-      dets.push_back(d);
+      dets.emplace_back(d);
       
       cv::rectangle(image, rect, cv::Scalar(0, 0, 255), 3 );
-      
-      ss.str("");
-      ss << j;
-      
-      cv::putText(image, ss.str(), cv::Point(cvRound(atof(c[0].c_str())), cvRound(atof(c[1].c_str()))), cv::FONT_HERSHEY_SIMPLEX,
+
+      cv::putText(image, std::to_string(j), cv::Point(cvRound(std::stof(c[0])), cvRound(std::stof(c[1]))), cv::FONT_HERSHEY_SIMPLEX,
 		  0.55, cv::Scalar(0, 255, 0), 2, CV_AA);
       
       ++j;
