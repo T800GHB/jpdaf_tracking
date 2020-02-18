@@ -52,48 +52,42 @@ namespace JPDAFTracker
       typedef std::vector<Detection> Detections;
       typedef std::vector<bool> VecBool;
       typedef std::shared_ptr<Track> Track_ptr;
-      typedef std::vector< Track_ptr > Tracks;
+      typedef std::vector<Track_ptr> Tracks;
     public:
       Tracker(const TrackerParam& _param) : param_(_param) { ; }
       void drawTracks(cv::Mat &_img) const;
-    public:
       virtual void track(const Detections& _detections) { ; }
       virtual void track(const Detections& _detections, VecBool& _isAssoc, uint& _trackID) { ; }
       virtual inline void push_back(const Track_ptr& _track) { ; }
-    public:
+
       inline const uint size() const {
 	    return tracks_.size();
       }
-    public:
+
       Tracks tracks() {
 	    return tracks_;
       }
+
       const Tracks tracks() const {
 	    return tracks_;
       }
     protected:
-      uint trackID_;
-      bool init_;
-      bool startTracking_;
-      TrackerParam param_;
-      Tracks tracks_;
-      Vec2f prev_detections_;
-      Vec2f not_associated_;
-      cv::RNG rng_;
-      Eigen::MatrixXf beta_;
-      Eigen::VectorXf last_beta_;
-    private:
-     virtual void delete_tracks() = 0;
-     virtual void manage_new_tracks() { ; }
-    protected:
-      constexpr static uint MAX_ASSOC = 10000;
-    protected:
-     VecBool analyze_tracks(const cv::Mat& _q, const Detections& _detections);
-     Matrices generate_hypothesis(const Vec2f& _selected_detections, const cv::Mat& _q);
-     Eigen::MatrixXf joint_probability(const Matrices& _association_matrices, const Vec2f& _selected_detections);
-    private:
-     virtual void associate(Vec2f& _selected_detections, cv::Mat& _q, const Detections& _detections) { ; }
-     virtual void associate(Vec2f& _selected_detections, cv::Mat& _q, const Detections& _detections, VecBool& _isAssoc) { ; }
+        uint trackID_;
+        bool init_;
+        bool startTracking_;
+        TrackerParam param_;
+        Tracks tracks_;
+        Vec2f prev_detections_;
+        Vec2f not_associated_;
+        cv::RNG rng_;
+        Eigen::MatrixXf beta_;
+        Eigen::VectorXf last_beta_;
+        constexpr static uint MAX_ASSOC = 10000;
+
+        VecBool analyze_tracks(const cv::Mat& _q, const Detections& _detections);
+        Matrices generate_hypothesis(const Vec2f& _selected_detections, const cv::Mat& _q);
+        Eigen::MatrixXf joint_probability(const Matrices& _association_matrices, const Vec2f& _selected_detections);
+        float EuclideanDist(const Eigen::Vector2f &p1, const Eigen::Vector2f &p2);
   };
 }
 

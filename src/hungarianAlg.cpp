@@ -9,8 +9,8 @@ AssignmentProblemSolver::~AssignmentProblemSolver()
 {
 }
 
-track_t AssignmentProblemSolver::Solve(
-	const distMatrix_t& distMatrixIn,
+float AssignmentProblemSolver::Solve(
+	const std::vector<float>& distMatrixIn,
 	size_t nOfRows,
 	size_t nOfColumns,
 	std::vector<int>& assignment,
@@ -19,7 +19,7 @@ track_t AssignmentProblemSolver::Solve(
 {
 	assignment.resize(nOfRows, -1);
 
-	track_t cost = 0;
+	float cost = 0;
 
 	switch (Method)
 	{
@@ -41,7 +41,7 @@ track_t AssignmentProblemSolver::Solve(
 // --------------------------------------------------------------------------
 // Computes the optimal assignment (minimum overall costs) using Munkres algorithm.
 // --------------------------------------------------------------------------
-void AssignmentProblemSolver::assignmentoptimal(assignments_t& assignment, track_t& cost, const distMatrix_t& distMatrixIn, size_t nOfRows, size_t nOfColumns)
+void AssignmentProblemSolver::assignmentoptimal(assignments_t& assignment, float& cost, const std::vector<float>& distMatrixIn, size_t nOfRows, size_t nOfColumns)
 {
 	// Generate distance cv::Matrix 
 	// and check cv::Matrix elements positiveness :)
@@ -49,13 +49,13 @@ void AssignmentProblemSolver::assignmentoptimal(assignments_t& assignment, track
 	// Total elements number
 	size_t nOfElements = nOfRows * nOfColumns;
 	// Memory allocation
-	track_t* distMatrix = (track_t *)malloc(nOfElements * sizeof(track_t));
+	float* distMatrix = (float *)malloc(nOfElements * sizeof(float));
 	// Pointer to last element
-	track_t* distMatrixEnd = distMatrix + nOfElements;
+	float* distMatrixEnd = distMatrix + nOfElements;
 
 	for (size_t row = 0; row < nOfElements; row++)
 	{
-		track_t value = distMatrixIn[row];
+		float value = distMatrixIn[row];
 		assert(value >= 0);
 		distMatrix[row] = value;
 	}
@@ -73,12 +73,12 @@ void AssignmentProblemSolver::assignmentoptimal(assignments_t& assignment, track
 		for (size_t row = 0; row < nOfRows; row++)
 		{
 			/* find the smallest element in the row */
-			track_t* distMatrixTemp = distMatrix + row;
-			track_t  minValue = *distMatrixTemp;
+			float* distMatrixTemp = distMatrix + row;
+			float  minValue = *distMatrixTemp;
 			distMatrixTemp += nOfRows;
 			while (distMatrixTemp < distMatrixEnd)
 			{
-				track_t value = *distMatrixTemp;
+				float value = *distMatrixTemp;
 				if (value < minValue)
 				{
 					minValue = value;
@@ -115,12 +115,12 @@ void AssignmentProblemSolver::assignmentoptimal(assignments_t& assignment, track
 		for (size_t col = 0; col < nOfColumns; col++)
 		{
 			/* find the smallest element in the column */
-			track_t* distMatrixTemp = distMatrix + nOfRows*col;
-			track_t* columnEnd = distMatrixTemp + nOfRows;
-			track_t  minValue = *distMatrixTemp++;
+			float* distMatrixTemp = distMatrix + nOfRows*col;
+			float* columnEnd = distMatrixTemp + nOfRows;
+			float  minValue = *distMatrixTemp++;
 			while (distMatrixTemp < columnEnd)
 			{
-				track_t value = *distMatrixTemp++;
+				float value = *distMatrixTemp++;
 				if (value < minValue)
 				{
 					minValue = value;
@@ -189,7 +189,7 @@ void AssignmentProblemSolver::buildassignmentvector(assignments_t& assignment, b
 // --------------------------------------------------------------------------
 //
 // --------------------------------------------------------------------------
-void AssignmentProblemSolver::computeassignmentcost(const assignments_t& assignment, track_t& cost, const distMatrix_t& distMatrixIn, size_t nOfRows)
+void AssignmentProblemSolver::computeassignmentcost(const assignments_t& assignment, float& cost, const std::vector<float>& distMatrixIn, size_t nOfRows)
 {
 	for (size_t row = 0; row < nOfRows; row++)
 	{
@@ -204,7 +204,7 @@ void AssignmentProblemSolver::computeassignmentcost(const assignments_t& assignm
 // --------------------------------------------------------------------------
 //
 // --------------------------------------------------------------------------
-void AssignmentProblemSolver::step2a(assignments_t& assignment, track_t *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, size_t nOfRows, size_t nOfColumns, size_t minDim)
+void AssignmentProblemSolver::step2a(assignments_t& assignment, float *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, size_t nOfRows, size_t nOfColumns, size_t minDim)
 {
 	bool *starMatrixTemp, *columnEnd;
 	/* cover every column containing a starred zero */
@@ -228,7 +228,7 @@ void AssignmentProblemSolver::step2a(assignments_t& assignment, track_t *distMat
 // --------------------------------------------------------------------------
 //
 // --------------------------------------------------------------------------
-void AssignmentProblemSolver::step2b(assignments_t& assignment, track_t *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, size_t nOfRows, size_t nOfColumns, size_t minDim)
+void AssignmentProblemSolver::step2b(assignments_t& assignment, float *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, size_t nOfRows, size_t nOfColumns, size_t minDim)
 {
 	/* count covered columns */
     size_t nOfCoveredColumns = 0;
@@ -254,7 +254,7 @@ void AssignmentProblemSolver::step2b(assignments_t& assignment, track_t *distMat
 // --------------------------------------------------------------------------
 //
 // --------------------------------------------------------------------------
-void AssignmentProblemSolver::step3(assignments_t& assignment, track_t *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, size_t nOfRows, size_t nOfColumns, size_t minDim)
+void AssignmentProblemSolver::step3(assignments_t& assignment, float *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, size_t nOfRows, size_t nOfColumns, size_t minDim)
 {
 	bool zerosFound = true;
 	while (zerosFound)
@@ -304,7 +304,7 @@ void AssignmentProblemSolver::step3(assignments_t& assignment, track_t *distMatr
 // --------------------------------------------------------------------------
 //
 // --------------------------------------------------------------------------
-void AssignmentProblemSolver::step4(assignments_t& assignment, track_t *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, size_t nOfRows, size_t nOfColumns, size_t minDim, size_t row, size_t col)
+void AssignmentProblemSolver::step4(assignments_t& assignment, float *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, size_t nOfRows, size_t nOfColumns, size_t minDim, size_t row, size_t col)
 {
 	const size_t nOfElements = nOfRows * nOfColumns;
 	/* generate temporary copy of starMatrix */
@@ -368,10 +368,10 @@ void AssignmentProblemSolver::step4(assignments_t& assignment, track_t *distMatr
 // --------------------------------------------------------------------------
 //
 // --------------------------------------------------------------------------
-void AssignmentProblemSolver::step5(assignments_t& assignment, track_t *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, size_t nOfRows, size_t nOfColumns, size_t minDim)
+void AssignmentProblemSolver::step5(assignments_t& assignment, float *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, size_t nOfRows, size_t nOfColumns, size_t minDim)
 {
 	/* find smallest uncovered element h */
-	float h = std::numeric_limits<track_t>::max();
+	float h = std::numeric_limits<float>::max();
 	for (size_t row = 0; row < nOfRows; row++)
 	{
 		if (!coveredRows[row])
@@ -419,7 +419,7 @@ void AssignmentProblemSolver::step5(assignments_t& assignment, track_t *distMatr
 // --------------------------------------------------------------------------
 // Computes a suboptimal solution. Good for cases without forbidden assignments.
 // --------------------------------------------------------------------------
-void AssignmentProblemSolver::assignmentsuboptimal2(assignments_t& assignment, track_t& cost, const distMatrix_t& distMatrixIn, size_t nOfRows, size_t nOfColumns)
+void AssignmentProblemSolver::assignmentsuboptimal2(assignments_t& assignment, float& cost, const std::vector<float>& distMatrixIn, size_t nOfRows, size_t nOfColumns)
 {
 	/* make working copy of distance Matrix */
 	const size_t nOfElements = nOfRows * nOfColumns;
@@ -433,7 +433,7 @@ void AssignmentProblemSolver::assignmentsuboptimal2(assignments_t& assignment, t
 	for (;;)
 	{
 		/* find minimum distance observation-to-track pair */
-		float minValue = std::numeric_limits<track_t>::max();
+		float minValue = std::numeric_limits<float>::max();
 		size_t tmpRow = 0;
 		size_t tmpCol = 0;
 		for (size_t row = 0; row < nOfRows; row++)
@@ -441,7 +441,7 @@ void AssignmentProblemSolver::assignmentsuboptimal2(assignments_t& assignment, t
 			for (size_t col = 0; col < nOfColumns; col++)
 			{
 				const float value = distMatrix[row + nOfRows*col];
-				if (value != std::numeric_limits<track_t>::max() && (value < minValue))
+				if (value != std::numeric_limits<float>::max() && (value < minValue))
 				{
 					minValue = value;
 					tmpRow = row;
@@ -450,17 +450,17 @@ void AssignmentProblemSolver::assignmentsuboptimal2(assignments_t& assignment, t
 			}
 		}
 
-		if (minValue != std::numeric_limits<track_t>::max())
+		if (minValue != std::numeric_limits<float>::max())
 		{
 			assignment[tmpRow] = static_cast<int>(tmpCol);
 			cost += minValue;
 			for (size_t n = 0; n < nOfRows; n++)
 			{
-				distMatrix[n + nOfRows*tmpCol] = std::numeric_limits<track_t>::max();
+				distMatrix[n + nOfRows*tmpCol] = std::numeric_limits<float>::max();
 			}
 			for (size_t n = 0; n < nOfColumns; n++)
 			{
-				distMatrix[tmpRow + nOfRows*n] = std::numeric_limits<track_t>::max();
+				distMatrix[tmpRow + nOfRows*n] = std::numeric_limits<float>::max();
 			}
 		}
 		else
@@ -474,7 +474,7 @@ void AssignmentProblemSolver::assignmentsuboptimal2(assignments_t& assignment, t
 // --------------------------------------------------------------------------
 // Computes a suboptimal solution. Good for cases with many forbidden assignments.
 // --------------------------------------------------------------------------
-void AssignmentProblemSolver::assignmentsuboptimal1(assignments_t& assignment, track_t& cost, const distMatrix_t& distMatrixIn, size_t nOfRows, size_t nOfColumns)
+void AssignmentProblemSolver::assignmentsuboptimal1(assignments_t& assignment, float& cost, const std::vector<float>& distMatrixIn, size_t nOfRows, size_t nOfColumns)
 {
 	/* make working copy of distance Matrix */
 	const size_t nOfElements = nOfRows * nOfColumns;
@@ -495,7 +495,7 @@ void AssignmentProblemSolver::assignmentsuboptimal1(assignments_t& assignment, t
 	{
 		for (size_t col = 0; col < nOfColumns; col++)
 		{
-			if (distMatrix[row + nOfRows*col] != std::numeric_limits<track_t>::max())
+			if (distMatrix[row + nOfRows*col] != std::numeric_limits<float>::max())
 			{
 				nOfValidTracks[col] += 1;
 				nOfValidObservations[row] += 1;
@@ -526,7 +526,7 @@ void AssignmentProblemSolver::assignmentsuboptimal1(assignments_t& assignment, t
 				bool singleValidationFound = false;
 				for (size_t row = 0; row < nOfRows; row++)
 				{
-					if (distMatrix[row + nOfRows * col] != std::numeric_limits<track_t>::max() && (nOfValidObservations[row] == 1))
+					if (distMatrix[row + nOfRows * col] != std::numeric_limits<float>::max() && (nOfValidObservations[row] == 1))
 					{
 						singleValidationFound = true;
 						break;
@@ -535,9 +535,9 @@ void AssignmentProblemSolver::assignmentsuboptimal1(assignments_t& assignment, t
 					if (singleValidationFound)
 					{
 						for (size_t row = 0; row < nOfRows; row++)
-							if ((nOfValidObservations[row] > 1) && distMatrix[row + nOfRows*col] != std::numeric_limits<track_t>::max())
+							if ((nOfValidObservations[row] > 1) && distMatrix[row + nOfRows*col] != std::numeric_limits<float>::max())
 							{
-								distMatrix[row + nOfRows*col] = std::numeric_limits<track_t>::max();
+								distMatrix[row + nOfRows*col] = std::numeric_limits<float>::max();
 								nOfValidObservations[row] -= 1;
 								nOfValidTracks[col] -= 1;
 								repeatSteps = true;
@@ -554,7 +554,7 @@ void AssignmentProblemSolver::assignmentsuboptimal1(assignments_t& assignment, t
 					bool singleValidationFound = false;
                     for (size_t col = 0; col < nOfColumns; col++)
 					{
-						if (distMatrix[row + nOfRows*col] != std::numeric_limits<track_t>::max() && (nOfValidTracks[col] == 1))
+						if (distMatrix[row + nOfRows*col] != std::numeric_limits<float>::max() && (nOfValidTracks[col] == 1))
 						{
 							singleValidationFound = true;
 							break;
@@ -565,9 +565,9 @@ void AssignmentProblemSolver::assignmentsuboptimal1(assignments_t& assignment, t
 					{
 						for (size_t col = 0; col < nOfColumns; col++)
 						{
-							if ((nOfValidTracks[col] > 1) && distMatrix[row + nOfRows*col] != std::numeric_limits<track_t>::max())
+							if ((nOfValidTracks[col] > 1) && distMatrix[row + nOfRows*col] != std::numeric_limits<float>::max())
 							{
-								distMatrix[row + nOfRows*col] = std::numeric_limits<track_t>::max();
+								distMatrix[row + nOfRows*col] = std::numeric_limits<float>::max();
 								nOfValidObservations[row] -= 1;
 								nOfValidTracks[col] -= 1;
 								repeatSteps = true;
@@ -585,12 +585,12 @@ void AssignmentProblemSolver::assignmentsuboptimal1(assignments_t& assignment, t
 			if (nOfValidObservations[row] > 1)
 			{
 				bool allSinglyValidated = true;
-				float minValue = std::numeric_limits<track_t>::max();
+				float minValue = std::numeric_limits<float>::max();
 				size_t tmpCol = 0;
                 for (size_t col = 0; col < nOfColumns; col++)
 				{
 					const float value = distMatrix[row + nOfRows*col];
-					if (value != std::numeric_limits<track_t>::max())
+					if (value != std::numeric_limits<float>::max())
 					{
 						if (nOfValidTracks[col] > 1)
 						{
@@ -611,11 +611,11 @@ void AssignmentProblemSolver::assignmentsuboptimal1(assignments_t& assignment, t
 					cost += minValue;
 					for (size_t n = 0; n < nOfRows; n++)
 					{
-						distMatrix[n + nOfRows*tmpCol] = std::numeric_limits<track_t>::max();
+						distMatrix[n + nOfRows*tmpCol] = std::numeric_limits<float>::max();
 					}
 					for (size_t n = 0; n < nOfColumns; n++)
 					{
-						distMatrix[row + nOfRows*n] = std::numeric_limits<track_t>::max();
+						distMatrix[row + nOfRows*n] = std::numeric_limits<float>::max();
 					}
 				}
 			}
@@ -627,12 +627,12 @@ void AssignmentProblemSolver::assignmentsuboptimal1(assignments_t& assignment, t
 			if (nOfValidTracks[col] > 1)
 			{
 				bool allSinglyValidated = true;
-				float minValue = std::numeric_limits<track_t>::max();
+				float minValue = std::numeric_limits<float>::max();
 				size_t tmpRow = 0;
 				for (size_t row = 0; row < nOfRows; row++)
 				{
 					const float value = distMatrix[row + nOfRows*col];
-					if (value != std::numeric_limits<track_t>::max())
+					if (value != std::numeric_limits<float>::max())
 					{
 						if (nOfValidObservations[row] > 1)
 						{
@@ -653,11 +653,11 @@ void AssignmentProblemSolver::assignmentsuboptimal1(assignments_t& assignment, t
 					cost += minValue;
 					for (size_t n = 0; n < nOfRows; n++)
 					{
-						distMatrix[n + nOfRows*col] = std::numeric_limits<track_t>::max();
+						distMatrix[n + nOfRows*col] = std::numeric_limits<float>::max();
 					}
 					for (size_t n = 0; n < nOfColumns; n++)
 					{
-						distMatrix[tmpRow + nOfRows*n] = std::numeric_limits<track_t>::max();
+						distMatrix[tmpRow + nOfRows*n] = std::numeric_limits<float>::max();
 					}
 				}
 			}
@@ -669,7 +669,7 @@ void AssignmentProblemSolver::assignmentsuboptimal1(assignments_t& assignment, t
 	for (;;)
 	{
 		/* find minimum distance observation-to-track pair */
-		float minValue = std::numeric_limits<track_t>::max();
+		float minValue = std::numeric_limits<float>::max();
 		size_t tmpRow = 0;
 		size_t tmpCol = 0;
 		for (size_t row = 0; row < nOfRows; row++)
@@ -677,7 +677,7 @@ void AssignmentProblemSolver::assignmentsuboptimal1(assignments_t& assignment, t
 			for (size_t col = 0; col < nOfColumns; col++)
 			{
 				const float value = distMatrix[row + nOfRows*col];
-				if (value != std::numeric_limits<track_t>::max() && (value < minValue))
+				if (value != std::numeric_limits<float>::max() && (value < minValue))
 				{
 					minValue = value;
 					tmpRow = row;
@@ -686,17 +686,17 @@ void AssignmentProblemSolver::assignmentsuboptimal1(assignments_t& assignment, t
 			}
 		}
 
-		if (minValue != std::numeric_limits<track_t>::max())
+		if (minValue != std::numeric_limits<float>::max())
 		{
 			assignment[tmpRow] = static_cast<int>(tmpCol);
 			cost += minValue;
 			for (size_t n = 0; n < nOfRows; n++)
 			{
-				distMatrix[n + nOfRows*tmpCol] = std::numeric_limits<track_t>::max();
+				distMatrix[n + nOfRows*tmpCol] = std::numeric_limits<float>::max();
 			}
 			for (size_t n = 0; n < nOfColumns; n++)
 			{
-				distMatrix[tmpRow + nOfRows*n] = std::numeric_limits<track_t>::max();
+				distMatrix[tmpRow + nOfRows*n] = std::numeric_limits<float>::max();
 			}
 		}
 		else

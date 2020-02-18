@@ -45,18 +45,17 @@ namespace JPDAFTracker
   class GlobalTracker : public Tracker
   {
     private:
-      typedef std::shared_ptr<Tracker> LocalTracker_ptr;
-      typedef std::vector<LocalTracker_ptr> LocalTrackers;
+        typedef std::shared_ptr<Tracker> LocalTracker_ptr;
+        typedef std::vector<LocalTracker_ptr> LocalTrackers;
     public:
-      GlobalTracker(const TrackerParam& _param);
-      void track(const Detections& _detections);
+        GlobalTracker(const TrackerParam& _param);
+        void track(const Detections& _detections);
     private:
-      LocalTrackers localTrackers_;
-    private:
-     void delete_tracks();
-     void manage_new_tracks();
-    private:
-     void associate(Vec2f& _selected_detections, cv::Mat& _q, const Detections& _detections);
+        LocalTrackers localTrackers_;
+
+        void delete_tracks();
+        void manage_new_tracks();
+        void associate(Vec2f& _selected_detections, cv::Mat& _q, const Detections& _detections);
   };
 }
 
