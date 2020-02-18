@@ -172,7 +172,8 @@ void GlobalTracker::manage_new_tracks() {
     cv::findNonZero(notAssignedDet, dets);
     prev_detections_.clear();
     for(uint i = 0; i < dets.total(); ++i) {
-      prev_detections_.push_back(not_associated_.at(i));
+        const uint& idx = dets.at<cv::Point>(i).x;
+        prev_detections_.push_back(not_associated_.at(idx));
     }
   }
 }
