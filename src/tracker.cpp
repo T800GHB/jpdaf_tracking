@@ -173,7 +173,7 @@ Tracker::Matrices Tracker::generate_hypothesis(const Vec2f& _selected_detections
   return association_matrices;
 }
 
-
+// Find trackers that are not assocate to any detection 
 Tracker::VecBool Tracker::analyze_tracks(const cv::Mat& _q, const std::vector<Detection>& _detections)
 {
   const cv::Mat& m_q = _q(cv::Rect(1, 0, _q.cols - 1, _q.rows));
