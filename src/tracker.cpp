@@ -17,9 +17,9 @@ void Tracker::drawTracks(cv::Mat &_img) const {
 Eigen::MatrixXf Tracker::joint_probability(const Matrices& _association_matrices,
 						const Vec2f& selected_detections) {
   uint hyp_num = _association_matrices.size();
-  Eigen::VectorXf Pr(_association_matrices.size());
-  uint validationIdx = _association_matrices.at(0).rows();
-  uint tracksize = tracks_.size();
+  Eigen::VectorXf Pr(hyp_num); // Probability list for every hypothesis
+  uint num_dets = selected_detections.size();  // Number of selected detection
+  uint track_size = tracks_.size();
   float prior;
   
   //Compute the total volume
@@ -30,13 +30,13 @@ Eigen::MatrixXf Tracker::joint_probability(const Matrices& _association_matrices
 
   for(uint i = 0; i < hyp_num; ++i) {
     //I assume that all the measurments can be false alarms
-    int false_alarms = validationIdx ;
+    int false_alarms = num_dets ;
     float N = 1.;
     //For each measurement j: I compute the measurement indicator ( tau(j, X) ) 
     // and the target detection indicator ( lambda(t, X) ) 
-    for(uint j = 0; j < validationIdx; ++j) {
+    for(uint j = 0; j < num_dets; ++j) {
       //Compute the MEASURAMENT ASSOCIATION INDICATOR      
-      const Eigen::MatrixXf& A_matrix = _association_matrices.at(i).block(j, 1, 1, tracksize);
+      const Eigen::MatrixXf& A_matrix = _association_matrices.at(i).block(j, 1, 1, track_size);
       const int& mea_indicator = A_matrix.sum();     
 
       if(mea_indicator == 1) {
@@ -44,7 +44,7 @@ Eigen::MatrixXf Tracker::joint_probability(const Matrices& _association_matrices
         --false_alarms;
         //Detect which track is associated to the measurement j
         //and compute the probability
-        for(uint notZero = 0; notZero < tracksize; ++notZero) {
+        for(uint notZero = 0; notZero < track_size; ++notZero) {
           if(A_matrix(0, notZero) == 1) {
             const Eigen::Vector2f& z_predict = tracks_.at(notZero)->getLastPredictionEigen();
             const Eigen::Matrix2f& S = tracks_.at(notZero)->S();
@@ -73,7 +73,7 @@ Eigen::MatrixXf Tracker::joint_probability(const Matrices& _association_matrices
     } else {
       //Compute the TARGET ASSOCIATION INDICATOR
       prior = 1.;
-      for(uint j = 0; j < tracksize; ++j) {
+      for(uint j = 0; j < track_size; ++j) {
         const Eigen::MatrixXf& target_matrix = _association_matrices.at(i).col(j+1);
         const int& target_indicator = target_matrix.sum();
         prior = prior * std::pow(param_.pd, target_indicator) * std::pow((1 - param_.pd), (1 - target_indicator));
@@ -96,23 +96,24 @@ Eigen::MatrixXf Tracker::joint_probability(const Matrices& _association_matrices
   }
     
   //Compute Beta Coefficients
-  Eigen::MatrixXf beta(validationIdx + 1, tracksize);
-  beta = Eigen::MatrixXf::Zero(validationIdx + 1, tracksize);
+  Eigen::MatrixXf beta(num_dets + 1, track_size);
+  beta = Eigen::MatrixXf::Zero(num_dets + 1, track_size);
    
-  Eigen::VectorXf sumBeta(tracksize);
+  Eigen::VectorXf sumBeta(track_size);
   sumBeta.setZero();
 
-  for(uint i = 0; i < tracksize; ++i) {
-    for(uint j = 0; j < validationIdx; ++j) {
+  for(uint i = 0; i < track_size; ++i) {
+    for(uint j = 0; j < num_dets; ++j) {
       for(uint k = 0; k < hyp_num; ++k) {
-	    beta(j, i) = beta(j, i) + Pr(k) * _association_matrices.at(k)(j, i+1);
+        // Probability of j-th measurement associate to i-th tracker, accumulate by all hypotheses
+        beta(j, i) += Pr(k) * _association_matrices.at(k)(j, i+1);
       }
       sumBeta(i) += beta(j, i);
     }
-    sumBeta(i) = 1 - sumBeta(i);
+    sumBeta(i) = 1 - sumBeta(i);    // Probability of no measurement associate to current tracker
   }
   
-  beta.row(validationIdx) = sumBeta;
+  beta.row(num_dets) = sumBeta;
 
   return beta;
 }
