@@ -51,7 +51,7 @@ Eigen::MatrixXf Tracker::joint_probability(const Matrices& _association_matrices
             const Eigen::Vector2f& diff = selected_detections.at(j) - z_predict;
             cv::Mat S_cv;
             cv::eigen2cv(S, S_cv);
-            //const float& b = diff.transpose() * S.inverse() * diff;
+            const float& eb = diff.transpose() * S.inverse() * diff;
             cv::Mat z_cv(cv::Size(2, 1), CV_32FC1);
             cv::Mat det_cv(cv::Size(2, 1), CV_32FC1);
             z_cv.at<float>(0) = z_predict(0);
@@ -59,8 +59,14 @@ Eigen::MatrixXf Tracker::joint_probability(const Matrices& _association_matrices
             det_cv.at<float>(0) = selected_detections.at(j)(0);
             det_cv.at<float>(1) = selected_detections.at(j)(1);
             const float& b = cv::Mahalanobis(z_cv, det_cv, S_cv.inv());
-            // Detection obey Gaussian distribution
-            N = N / sqrt((2*CV_PI*S).determinant())*exp(-b);
+            // Detection obey Gaussian distribution. In the standard Gaussian distribution, there is 0.5 before b
+            // But, I think author want to amplify the covariance, cover more measurements
+            // sqrt((2*CV_PI*S).determinant()) is equal to pow(pow((2 * CV_PI), 0.5), 2) * pow(S.determinant(), 0.5)
+            // CV Mahalanobis calculate result is sqrt of Eigen Mahalanobis
+            // The original author calculation, different from standard formula, i do not know why
+//            N = N / sqrt((2*CV_PI*S).determinant())*exp(-b);
+            // Calcuation should be this, according to standard Gaussian distribution formula, have samilar result
+            N = N / sqrt((2*CV_PI*S).determinant())*exp(-0.5 * eb);
           }
         }
       }
