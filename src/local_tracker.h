@@ -8,7 +8,7 @@ namespace JPDAFTracker
   class LocalTracker : public Tracker {
     public:
       LocalTracker(const TrackerParam& _param);
-      void track(const Detections& _detections, VecBool& _isAssoc, uint& _trackID);
+      void track(const Detections& _detections, VecBool& _isAssoc, uint32_t& _trackID);
       inline void push_back(const Track_ptr& _track) {
 	    tracks_.emplace_back(_track);
       }

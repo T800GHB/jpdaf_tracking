@@ -57,10 +57,10 @@ namespace JPDAFTracker
       Tracker(const TrackerParam& _param) : param_(_param) { ; }
       void drawTracks(cv::Mat &_img) const;
       virtual void track(const Detections& _detections) { ; }
-      virtual void track(const Detections& _detections, VecBool& _isAssoc, uint& _trackID) { ; }
+      virtual void track(const Detections& _detections, VecBool& _isAssoc, uint32_t& _trackID) { ; }
       virtual inline void push_back(const Track_ptr& _track) { ; }
 
-      inline const uint size() const {
+      inline const uint32_t size() const {
 	    return tracks_.size();
       }
 
@@ -72,7 +72,7 @@ namespace JPDAFTracker
 	    return tracks_;
       }
     protected:
-        uint trackID_;
+        uint32_t trackID_;
         bool init_;
         bool startTracking_;
         TrackerParam param_;
@@ -82,12 +82,14 @@ namespace JPDAFTracker
         cv::RNG rng_;
         Eigen::MatrixXf beta_;
         Eigen::VectorXf last_beta_;
-        constexpr static uint MAX_ASSOC = 10000;
+        constexpr static uint32_t MAX_ASSOC = 10000;
 
         VecBool analyze_tracks(const cv::Mat& _q, const Detections& _detections);
-        Matrices generate_hypothesis(const Vec2f& _selected_detections, const cv::Mat& _q);
+        Tracker::Matrices generate_hypothesis(const cv::Mat &_q);
         Eigen::MatrixXf joint_probability(const Matrices& _association_matrices, const Vec2f& _selected_detections);
         float EuclideanDist(const Eigen::Vector2f &p1, const Eigen::Vector2f &p2);
+        float OpencvMahalanobis(const Eigen::Vector2f& prediction, const Eigen::Vector2f& measurement,
+                const Eigen::Matrix2f& covariance);
   };
 }
 

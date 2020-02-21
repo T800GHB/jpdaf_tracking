@@ -1,5 +1,4 @@
 #include "tracker.h"
-
 using namespace JPDAFTracker;
 
 void Tracker::drawTracks(cv::Mat &_img) const {
@@ -16,10 +15,10 @@ void Tracker::drawTracks(cv::Mat &_img) const {
 
 Eigen::MatrixXf Tracker::joint_probability(const Matrices& _association_matrices,
 						const Vec2f& selected_detections) {
-  uint hyp_num = _association_matrices.size();
+  uint32_t hyp_num = _association_matrices.size();
   Eigen::VectorXf Pr(hyp_num); // Probability list for every hypothesis
-  uint num_dets = selected_detections.size();  // Number of selected detection
-  uint track_size = tracks_.size();
+  uint32_t num_dets = selected_detections.size();  // Number of selected detection
+  uint32_t track_size = tracks_.size();
   float prior;
   
   //Compute the total volume
@@ -28,43 +27,41 @@ Eigen::MatrixXf Tracker::joint_probability(const Matrices& _association_matrices
     V += track->getEllipseVolume();
   }
 
-  for(uint i = 0; i < hyp_num; ++i) {
+  for(uint32_t i = 0; i < hyp_num; ++i) {
     //I assume that all the measurments can be false alarms
-    int false_alarms = num_dets ;
+    int32_t false_alarms = num_dets ;
     float N = 1.;
     //For each measurement j: I compute the measurement indicator ( tau(j, X) ) 
     // and the target detection indicator ( lambda(t, X) ) 
-    for(uint j = 0; j < num_dets; ++j) {
+    for(uint32_t j = 0; j < num_dets; ++j) {
       //Compute the MEASURAMENT ASSOCIATION INDICATOR      
       const Eigen::MatrixXf& A_matrix = _association_matrices.at(i).block(j, 1, 1, track_size);
-      const int& mea_indicator = A_matrix.sum();     
+      const int32_t& mea_indicator = A_matrix.sum();     
 
       if(mea_indicator == 1) {
         //Update the total number of wrong measurements in X
         --false_alarms;
         //Detect which track is associated to the measurement j
         //and compute the probability
-        for(uint notZero = 0; notZero < track_size; ++notZero) {
+        for(uint32_t notZero = 0; notZero < track_size; ++notZero) {
           if(A_matrix(0, notZero) == 1) {
             const Eigen::Vector2f& z_predict = tracks_.at(notZero)->getLastPredictionEigen();
             const Eigen::Matrix2f& S = tracks_.at(notZero)->S();
             const Eigen::Vector2f& diff = selected_detections.at(j) - z_predict;
-            cv::Mat S_cv;
-            cv::eigen2cv(S, S_cv);
+            // Eigen calculate normal Mahalanobis distance
             const float& eb = diff.transpose() * S.inverse() * diff;
-            cv::Mat z_cv(cv::Size(2, 1), CV_32FC1);
-            cv::Mat det_cv(cv::Size(2, 1), CV_32FC1);
-            z_cv.at<float>(0) = z_predict(0);
-            z_cv.at<float>(1) = z_predict(1);
-            det_cv.at<float>(0) = selected_detections.at(j)(0);
-            det_cv.at<float>(1) = selected_detections.at(j)(1);
-            const float& b = cv::Mahalanobis(z_cv, det_cv, S_cv.inv());
+            // Opencv calculate sqrt of normal Mahalanobis distance
+            const float& cb = OpencvMahalanobis(z_predict, selected_detections.at(j), S);
+
             // Detection obey Gaussian distribution. In the standard Gaussian distribution, there is 0.5 before b
             // But, I think author want to amplify the covariance, cover more measurements
+            // Assocation gate use sqrt of Mahalanobis to filter detection
+
             // sqrt((2*CV_PI*S).determinant()) is equal to pow(pow((2 * CV_PI), 0.5), 2) * pow(S.determinant(), 0.5)
-            // CV Mahalanobis calculate result is sqrt of Eigen Mahalanobis
+
             // The original author calculation, different from standard formula, i do not know why
-//            N = N / sqrt((2*CV_PI*S).determinant())*exp(-b);
+//             N = N / sqrt((2*CV_PI*S).determinant())*exp(-cb);
+
             // Calcuation should be this, according to standard Gaussian distribution formula, have samilar result
             N = N / sqrt((2*CV_PI*S).determinant())*exp(-0.5 * eb);
           }
@@ -79,16 +76,18 @@ Eigen::MatrixXf Tracker::joint_probability(const Matrices& _association_matrices
     } else {
       //Compute the TARGET ASSOCIATION INDICATOR
       prior = 1.;
-      for(uint j = 0; j < track_size; ++j) {
+      for(uint32_t j = 0; j < track_size; ++j) {
         const Eigen::MatrixXf& target_matrix = _association_matrices.at(i).col(j+1);
-        const int& target_indicator = target_matrix.sum();
+        const int32_t& target_indicator = target_matrix.sum();
         prior = prior * std::pow(param_.pd, target_indicator) * std::pow((1 - param_.pd), (1 - target_indicator));
       }
     }
     
-    //Compute the number of false alarm events in current hypothesis for which the same target set has been detected
-    int a = 1;
-    for(int j = 1; j <= false_alarms; ++j) {
+    // Compute the number of false alarm events in current hypothesis for which the same target set has been detected
+    // Factorial of reversed false alarm
+
+    int32_t a = 1;
+    for(int32_t j = 1; j <= false_alarms; ++j) {
       a = a * j;
     }
     //
@@ -108,9 +107,9 @@ Eigen::MatrixXf Tracker::joint_probability(const Matrices& _association_matrices
   Eigen::VectorXf sumBeta(track_size);
   sumBeta.setZero();
 
-  for(uint i = 0; i < track_size; ++i) {
-    for(uint j = 0; j < num_dets; ++j) {
-      for(uint k = 0; k < hyp_num; ++k) {
+  for(uint32_t i = 0; i < track_size; ++i) {
+    for(uint32_t j = 0; j < num_dets; ++j) {
+      for(uint32_t k = 0; k < hyp_num; ++k) {
         // Probability of j-th measurement associate to i-th tracker, accumulate by all hypotheses
         beta(j, i) += Pr(k) * _association_matrices.at(k)(j, i+1);
       }
@@ -125,38 +124,38 @@ Eigen::MatrixXf Tracker::joint_probability(const Matrices& _association_matrices
 }
 
 
-Tracker::Matrices Tracker::generate_hypothesis(const Vec2f& _selected_detections, 
-						    const cv::Mat& _q) {
-  uint validationIdx = _q.rows;
+Tracker::Matrices Tracker::generate_hypothesis(const cv::Mat &_q) {
+  uint32_t num_det = _q.rows;
   //All the measurements can be generated by the clutter track
   Eigen::MatrixXf A_Matrix(_q.rows, _q.cols); 
   A_Matrix = Eigen::MatrixXf::Zero(_q.rows, _q.cols);
   // First column set all one means all false alarm
   A_Matrix.col(0).setOnes();
+  // A_Matrix could be a sparse matrix, less memory, than delete limitation of hypothesis by MAX_ASSOC
   Matrices tmp_association_matrices(MAX_ASSOC, A_Matrix);
   
-  uint hyp_num = 0;
+  uint32_t hyp_num = 0;
   //Generating all the possible association matrices from the possible measurements
-  if(validationIdx != 0) {
-    for(uint i = 0; i < _q.rows; ++i) {
-      for(uint j = 1; j < _q.cols; ++j) {
-        if(_q.at<int>(i, j)) {                              // == 1, associate pair det and track
+  if(num_det != 0) {
+    for(uint32_t i = 0; i < _q.rows; ++i) {
+      for(uint32_t j = 1; j < _q.cols; ++j) {
+        if(_q.at<int32_t>(i, j)) {                              // == 1, associate pair det and track
           tmp_association_matrices.at(hyp_num)(i, 0) = 0;
           tmp_association_matrices.at(hyp_num)(i, j) = 1;
           ++hyp_num;
           if ( j == _q.cols - 1 ) {
               continue;
           }
-          for(uint l = 0; l < _q.rows; ++l) {
+          for(uint32_t l = 0; l < _q.rows; ++l) {
             if(l != i) {
-              for(uint m = j + 1; m < _q.cols; ++m) {// CHECK Q.COLS - 1
-                if(_q.at<int>(l, m)) {
+              for(uint32_t m = j + 1; m < _q.cols; ++m) {// CHECK Q.COLS - 1
+                if(_q.at<int32_t>(l, m)) {
                   tmp_association_matrices.at(hyp_num)(i, 0) = 0;
                   tmp_association_matrices.at(hyp_num)(i, j) = 1;
                   tmp_association_matrices.at(hyp_num)(l, 0) = 0;
                   tmp_association_matrices.at(hyp_num)(l, m) = 1;
                   ++hyp_num;
-                } //if(q.at<int>(l, m))
+                } //if(q.at<int32_t>(l, m))
               }// m
             } // if l != i
           } // l
@@ -177,7 +176,7 @@ Tracker::VecBool Tracker::analyze_tracks(const cv::Mat& _q, const std::vector<De
   cv::Mat col_sum(cv::Size(m_q.cols, 1), _q.type(), cv::Scalar(0));
 
   VecBool not_associate(m_q.cols, true); //ALL TRACKS ARE ASSOCIATED
-  for(uint i = 0; i < m_q.rows; ++i) {
+  for(uint32_t i = 0; i < m_q.rows; ++i) {
     col_sum += m_q.row(i);
   }
   cv::Mat nonZero;
@@ -187,7 +186,7 @@ Tracker::VecBool Tracker::analyze_tracks(const cv::Mat& _q, const std::vector<De
   cv::Mat zeroValues;
   cv::findNonZero(zero, zeroValues);
   
-  for(uint i = 0; i < zeroValues.total(); ++i) {
+  for(uint32_t i = 0; i < zeroValues.total(); ++i) {
     not_associate.at(zeroValues.at<cv::Point>(i).x) = false;
   }   
   return not_associate;
@@ -196,4 +195,17 @@ Tracker::VecBool Tracker::analyze_tracks(const cv::Mat& _q, const std::vector<De
 float Tracker::EuclideanDist(const Eigen::Vector2f &p1, const Eigen::Vector2f &p2) {
     const Eigen::Vector2f& tmp = p1 - p2;
     return sqrt(tmp(0) * tmp(0) + tmp(1) * tmp(1));
+}
+
+float Tracker::OpencvMahalanobis(const Eigen::Vector2f &prediction, const Eigen::Vector2f &measurement,
+                                 const Eigen::Matrix2f &covariance) {
+    cv::Mat covariance_cv;
+    cv::eigen2cv(covariance, covariance_cv);
+    cv::Mat prediction_cv(cv::Size(2, 1), CV_32FC1);
+    cv::Mat measurement_cv(cv::Size(2, 1), CV_32FC1);
+    prediction_cv.at<float>(0) = prediction(0);
+    prediction_cv.at<float>(1) = prediction(1);
+    measurement_cv.at<float>(0) = measurement(0);
+    measurement_cv.at<float>(1) = measurement(1);
+    return cv::Mahalanobis(prediction_cv, measurement_cv, covariance_cv.inv());
 }

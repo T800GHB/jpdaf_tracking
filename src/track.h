@@ -56,11 +56,11 @@ namespace JPDAFTracker
 	    return color_;
       }
 
-      void setId(const int& _id) {
+      void setId(const int32_t& _id) {
 	    id = _id;
       }
 
-      const int getId() const {
+      const int32_t getId() const {
 	    return id;
       }
 
@@ -129,16 +129,16 @@ namespace JPDAFTracker
       }
 
     private:
-      int id;
-      int maxNotDetection;
+      int32_t id;
+      int32_t maxNotDetection;
       std::shared_ptr<Kalman> KF;
       float ellipse_volume;
-      int number_returns;
+      int32_t number_returns;
       float side;
       float g_sigma;
       float gamma;
-      int life_time;
-      int nodetections;
+      int32_t life_time;
+      int32_t nodetections;
       float initial_entropy;
       TrackState entropy_sentinel;
       cv::Point2f last_prediction;
